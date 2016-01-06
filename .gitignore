@@ -1,0 +1,9 @@
+.classpath
+.project
+dependency-reduced-pom.xml
+target/
+.settings/*
+*.swp
+*.json
+*.key
+*.proof
