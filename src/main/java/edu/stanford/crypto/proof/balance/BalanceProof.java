@@ -3,6 +3,7 @@
  */
 package edu.stanford.crypto.proof.balance;
 
+import com.sun.org.apache.regexp.internal.RE;
 import edu.stanford.crypto.SQLDatabase;
 import edu.stanford.crypto.database.Database;
 import edu.stanford.crypto.proof.Proof;
@@ -17,8 +18,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 public class BalanceProof
-implements Proof,
-SQLDatabase {
+        implements Proof,
+        SQLDatabase {
     public static final String ADD_USER_SQL = "INSERT INTO balance_proof VALUES  (?, ?) ";
     public static final String GET_PROOF_SQL = "SELECT balance_proof.range_proof FROM balance_proof WHERE customer_id_hash= ?";
     public static final String LIST_PROOFS_SQL = "SELECT balance_proof.range_proof FROM balance_proof ";
@@ -28,8 +29,8 @@ SQLDatabase {
     private final Connection connection = Database.getConnection();
 
     public BalanceProof() throws SQLException {
-        this.updateStatement = this.connection.prepareStatement("INSERT INTO balance_proof VALUES  (?, ?) ");
-        this.readStatement = this.connection.prepareStatement("SELECT balance_proof.range_proof FROM balance_proof WHERE customer_id_hash= ?");
+        this.updateStatement = this.connection.prepareStatement(ADD_USER_SQL);
+        this.readStatement = this.connection.prepareStatement(GET_PROOF_SQL);
     }
 
     public void addCustomer(BigInteger hashedId, BinaryRangeProof balanceProof) {
@@ -37,8 +38,7 @@ SQLDatabase {
             this.updateStatement.setBytes(1, hashedId.toByteArray());
             this.updateStatement.setBytes(2, balanceProof.serialize());
             this.updateStatement.executeUpdate();
-        }
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             throw new IllegalArgumentException(ex);
         }
     }
@@ -51,8 +51,7 @@ SQLDatabase {
                 byte[] proof = resultSet.getBytes(1);
                 return new BinaryRangeProof(proof);
             }
-        }
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
         }
         throw new IllegalArgumentException("No such id " + Arrays.toString(hashedId.toByteArray()));
@@ -61,9 +60,9 @@ SQLDatabase {
     public Iterator<BinaryRangeProof> getRangeProofs() {
         try {
             this.connection.setAutoCommit(false);
-            final ResultSet resultSet = this.connection.createStatement().executeQuery("SELECT balance_proof.range_proof FROM balance_proof ");
+            final ResultSet resultSet = this.connection.createStatement().executeQuery(LIST_PROOFS_SQL);
             resultSet.setFetchSize(1000);
-            return new Iterator<BinaryRangeProof>(){
+            return new Iterator<BinaryRangeProof>() {
 
                 @Override
                 public boolean hasNext() {
@@ -73,8 +72,7 @@ SQLDatabase {
                             BalanceProof.this.connection.setAutoCommit(true);
                         }
                         return next;
-                    }
-                    catch (SQLException e) {
+                    } catch (SQLException e) {
                         e.printStackTrace();
                         throw new IllegalStateException(e);
                     }
@@ -85,15 +83,13 @@ SQLDatabase {
                     try {
                         byte[] bytes = resultSet.getBytes(1);
                         return new BinaryRangeProof(bytes);
-                    }
-                    catch (SQLException e) {
+                    } catch (SQLException e) {
                         e.printStackTrace();
                         throw new IllegalStateException(e);
                     }
                 }
             };
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             throw new IllegalStateException(e);
         }
@@ -101,15 +97,14 @@ SQLDatabase {
 
     public String getSizeInfo() {
         try {
-            ResultSet resultSet = this.connection.createStatement().executeQuery("SELECT pg_size_pretty(pg_total_relation_size('public.balance_proof'))");
+            ResultSet resultSet = this.connection.createStatement().executeQuery(READ_SIZE);
             if (resultSet.next()) {
                 return resultSet.getString(1);
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        throw new IllegalStateException("Couldn't run query SELECT pg_size_pretty(pg_total_relation_size('public.balance_proof'))");
+        throw new IllegalStateException("Couldn't run query " + READ_SIZE);
     }
 
     @Override

@@ -5,7 +5,6 @@ package edu.stanford.crypto.proof.assets;
 
 import edu.stanford.crypto.proof.ProofData;
 
-class AssetProofData
-implements ProofData<AssetProof> {
+public class AssetProofData implements ProofData<AssetProof> {
 }
 
