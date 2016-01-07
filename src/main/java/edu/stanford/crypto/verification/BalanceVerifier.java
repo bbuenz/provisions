@@ -22,8 +22,8 @@ implements Verifier<BalanceProof, BalanceVerificationData> {
     @Override
     public void verify(BalanceProof proof, BalanceVerificationData data) {
         Iterator<BinaryRangeProof> rangeProofs = proof.getRangeProofs();
-        RangeProofVerificationData verificationData = new RangeProofVerificationData(new GeneratorData<BinaryProof>(), BigInteger.ONE.shiftLeft(data.getMaxBits()).subtract(BigInteger.ONE));
-        AtomicReference<ECPoint> totalEncryption = new AtomicReference<ECPoint>(ECConstants.INFINITY);
+        RangeProofVerificationData verificationData = new RangeProofVerificationData(new GeneratorData<>(), BigInteger.ONE.shiftLeft(data.getMaxBits()).subtract(BigInteger.ONE));
+        AtomicReference<ECPoint> totalEncryption = new AtomicReference<>(ECConstants.INFINITY);
         BlockingExecutor pool = new BlockingExecutor();
         while (rangeProofs.hasNext()) {
             BinaryRangeProof rangeProof = rangeProofs.next();

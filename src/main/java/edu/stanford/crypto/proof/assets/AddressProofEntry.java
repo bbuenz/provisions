@@ -9,12 +9,10 @@ import org.bouncycastle.math.ec.ECPoint;
 public class AddressProofEntry {
     private final ECPoint publicKey;
     private final AddressProof addressProof;
-    private final BinaryProof binaryProof;
 
-    public AddressProofEntry(ECPoint publicKey, AddressProof addressProof, BinaryProof binaryProof) {
+    public AddressProofEntry(ECPoint publicKey, AddressProof addressProof) {
         this.publicKey = publicKey;
         this.addressProof = addressProof;
-        this.binaryProof = binaryProof;
     }
 
     public ECPoint getPublicKey() {
@@ -25,8 +23,5 @@ public class AddressProofEntry {
         return this.addressProof;
     }
 
-    public BinaryProof getBinaryProof() {
-        return this.binaryProof;
-    }
 }
 

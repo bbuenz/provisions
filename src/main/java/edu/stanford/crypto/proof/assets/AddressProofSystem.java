@@ -3,6 +3,7 @@
  */
 package edu.stanford.crypto.proof.assets;
 
+import edu.stanford.crypto.ECConstants;
 import edu.stanford.crypto.ProofUtils;
 import edu.stanford.crypto.proof.ProofSystem;
 import org.bouncycastle.math.ec.ECPoint;
@@ -10,8 +11,11 @@ import org.bouncycastle.math.ec.ECPoint;
 import java.math.BigInteger;
 import java.util.Optional;
 
-public class AddressProofSystem
-implements ProofSystem<AddressProof, AddressProofData> {
+/**
+ * Zero knowledge proof for public key y with balance b of the statement:<br>
+ * "Either I know the private key x such that xG=y and p is a commitment to b or p is a commitment to 0."
+ */
+public class AddressProofSystem implements ProofSystem<AddressProof, AddressProofData> {
     @Override
     public AddressProof createProof(AddressProofData data) {
         BigInteger u1 = ProofUtils.randomNumber();
@@ -31,12 +35,31 @@ implements ProofSystem<AddressProof, AddressProofData> {
         BigInteger s = privateKey.isPresent() ? BigInteger.ONE : BigInteger.ZERO;
         ECPoint p = b.multiply(s).add(h.multiply(v));
         ECPoint l = y.multiply(s).add(h.multiply(t));
-        BigInteger challenge = ProofUtils.computeChallenge(g, h, y, b, p, l, a1, a2, a3);
+
+        //Binary proof
+        BigInteger uZero = ProofUtils.randomNumber();
+        BigInteger uOne = ProofUtils.randomNumber();
+        BigInteger falseChallenge = ProofUtils.randomNumber(256).mod(ECConstants.CHALLENGE_Q);
+        ECPoint falseChallengeElement = b.multiply(falseChallenge);
+        ECPoint aZero = h.multiply(uZero).subtract(falseChallengeElement.multiply(s));
+        ECPoint aOne = h.multiply(uOne).add(falseChallengeElement.multiply(BigInteger.ONE.subtract(s)));
+
+
+        BigInteger challenge = ProofUtils.computeChallenge(g, h, y, b, p, l, a1, a2, a3, aZero, aOne);
         BigInteger responseS = u1.add(challenge.multiply(s));
         BigInteger responseV = u2.add(challenge.multiply(v));
         BigInteger responseT = u3.add(challenge.multiply(t));
         BigInteger responseX = u4.add(challenge.multiply(privateKey.orElse(BigInteger.ZERO)));
-        return new AddressProof(p, l, challenge, responseS, responseV, responseT, responseX);
+        BigInteger trueChallenge = challenge.subtract(falseChallenge).mod(ECConstants.CHALLENGE_Q);
+        BigInteger falseV = falseChallenge.multiply(v);
+        BigInteger trueV = trueChallenge.multiply(v);
+
+        BigInteger responseZero = uZero.add(trueV.multiply(BigInteger.ONE.subtract(s))).add(falseV.multiply(s)).mod(ECConstants.Q);
+        BigInteger responseOne = uOne.add(falseV.multiply(BigInteger.ONE.subtract(s))).add(trueV.multiply(s)).mod(ECConstants.Q);
+
+
+        return new AddressProof(p, l, privateKey.isPresent() ? falseChallenge : trueChallenge, privateKey.isPresent() ? trueChallenge : falseChallenge, responseS, responseV, responseT, responseX, responseZero, responseOne);
     }
+
 }
 

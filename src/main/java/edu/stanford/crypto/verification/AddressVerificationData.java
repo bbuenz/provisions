@@ -8,7 +8,7 @@ import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
 
-class AddressVerificationData
+public class AddressVerificationData
         implements VerificationData<AddressProof> {
     private final ECPoint publicKey;
     private final BigInteger balance;

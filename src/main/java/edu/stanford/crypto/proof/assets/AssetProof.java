@@ -19,17 +19,17 @@ import java.util.Iterator;
 public class AssetProof
 implements Proof,
 SQLDatabase {
-    public static final String ADD_ADDRESS = "INSERT INTO asset_proof VALUES  (?, ?, ?) ";
-    public static final String GET_PROOF_SQL = "SELECT asset_proof.main_proof,asset_proof.binary_proof FROM asset_proof WHERE public_key= ?";
-    public static final String LIST_PROOFS_SQL = "SELECT asset_proof.public_key,asset_proof.main_proof,asset_proof.binary_proof FROM asset_proof ";
+    public static final String ADD_ADDRESS = "INSERT INTO asset_proof VALUES  (?, ?) ";
+    public static final String GET_PROOF_SQL = "SELECT asset_proof.main_proof FROM asset_proof WHERE public_key= ?";
+    public static final String LIST_PROOFS_SQL = "SELECT asset_proof.public_key,asset_proof.main_proof FROM asset_proof ";
     public static final String READ_SIZE = "SELECT pg_size_pretty(pg_total_relation_size('public.asset_proof'))";
     private final PreparedStatement updateStatement;
     private final PreparedStatement readStatement;
     private final Connection connection = Database.getConnection();
 
     public AssetProof() throws SQLException {
-        this.updateStatement = this.connection.prepareStatement("INSERT INTO asset_proof VALUES  (?, ?, ?) ");
-        this.readStatement = this.connection.prepareStatement("SELECT asset_proof.main_proof,asset_proof.binary_proof FROM asset_proof WHERE public_key= ?");
+        this.updateStatement = this.connection.prepareStatement(ADD_ADDRESS);
+        this.readStatement = this.connection.prepareStatement(GET_PROOF_SQL);
     }
 
     @Override
@@ -37,11 +37,10 @@ SQLDatabase {
         this.connection.close();
     }
 
-    public void addAddressProof(ECPoint publicKey, AddressProof proof, BinaryProof binaryProof) {
+    public void addAddressProof(ECPoint publicKey, AddressProof proof) {
         try {
             this.updateStatement.setBytes(1, publicKey.getEncoded(true));
             this.updateStatement.setBytes(2, proof.serialize());
-            this.updateStatement.setBytes(3, binaryProof.serialize());
             this.updateStatement.executeUpdate();
         }
         catch (SQLException ex) {
@@ -67,7 +66,7 @@ SQLDatabase {
     public Iterator<AddressProofEntry> getAddressProofs() {
         try {
             this.connection.setAutoCommit(false);
-            final ResultSet resultSet = this.connection.createStatement().executeQuery("SELECT asset_proof.public_key,asset_proof.main_proof,asset_proof.binary_proof FROM asset_proof ");
+            final ResultSet resultSet = this.connection.createStatement().executeQuery(LIST_PROOFS_SQL);
             resultSet.setFetchSize(1000);
             return new Iterator<AddressProofEntry>(){
 
@@ -91,11 +90,9 @@ SQLDatabase {
                     try {
                         byte[] publicKeyBytes = resultSet.getBytes(1);
                         byte[] proofBytes = resultSet.getBytes(2);
-                        byte[] binaryProofBytes = resultSet.getBytes(3);
                         ECPoint publicKey = ECConstants.BITCOIN_CURVE.decodePoint(publicKeyBytes);
                         AddressProof addressProof = new AddressProof(proofBytes);
-                        BinaryProof binaryProof = new BinaryProof(binaryProofBytes);
-                        return new AddressProofEntry(publicKey, addressProof, binaryProof);
+                        return new AddressProofEntry(publicKey, addressProof);
                     }
                     catch (SQLException e) {
                         e.printStackTrace();
@@ -116,7 +113,7 @@ SQLDatabase {
 
     public String getSizeInfo() {
         try {
-            ResultSet resultSet = this.connection.createStatement().executeQuery("SELECT pg_size_pretty(pg_total_relation_size('public.asset_proof'))");
+            ResultSet resultSet = this.connection.createStatement().executeQuery(READ_SIZE);
             if (resultSet.next()) {
                 return resultSet.getString(1);
             }
@@ -124,7 +121,7 @@ SQLDatabase {
         catch (SQLException e) {
             e.printStackTrace();
         }
-        throw new IllegalStateException("Couldn't run query SELECT pg_size_pretty(pg_total_relation_size('public.asset_proof'))");
+        throw new IllegalStateException("Couldn't run query "+READ_SIZE);
     }
 
 }

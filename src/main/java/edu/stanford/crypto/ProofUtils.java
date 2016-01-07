@@ -14,7 +14,7 @@ public class ProofUtils {
     private static final ThreadLocal<MessageDigest> SHA256;
     private static final SecureRandom RNG;
 
-    public static /* varargs */ BigInteger computeChallenge(ECPoint ... points) {
+    public static BigInteger computeChallenge(ECPoint ... points) {
         for (ECPoint point : points) {
             SHA256.get().update(point.getEncoded(false));
         }

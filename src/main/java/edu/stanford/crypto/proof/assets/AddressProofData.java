@@ -18,8 +18,8 @@ class AddressProofData implements ProofData<AddressProof> {
     private final ECPoint g;
     private final ECPoint h;
 
-    public AddressProofData(Optional<BigInteger> privateKey, ECPoint publicKey, BigInteger balance, BigInteger balanceRandomness, BigInteger keyKnownRandomness, ECPoint g, ECPoint h) {
-        this.privateKey = privateKey;
+    public AddressProofData(BigInteger privateKey, ECPoint publicKey, BigInteger balance, BigInteger balanceRandomness, BigInteger keyKnownRandomness, ECPoint g, ECPoint h) {
+        this.privateKey = Optional.of(privateKey);
         this.balanceRandomness = balanceRandomness;
         this.keyKnownRandomness = keyKnownRandomness;
         this.publicKey = publicKey;
@@ -27,6 +27,18 @@ class AddressProofData implements ProofData<AddressProof> {
         this.g = g;
         this.h = h;
     }
+
+    public AddressProofData(Optional<BigInteger> privateKey, ECPoint publicKey, BigInteger balance, BigInteger balanceRandomness, BigInteger keyKnownRandomness, ECPoint g, ECPoint h) {
+        this.privateKey =privateKey;
+        this.balanceRandomness = balanceRandomness;
+        this.keyKnownRandomness = keyKnownRandomness;
+        this.publicKey = publicKey;
+        this.balance = balance;
+        this.g = g;
+        this.h = h;
+    }
+
+
 
     public Optional<BigInteger> getPrivateKey() {
         return this.privateKey;
