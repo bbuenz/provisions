@@ -8,8 +8,7 @@ import edu.stanford.crypto.proof.binary.BinaryRangeProof;
 
 import java.math.BigInteger;
 
-class RangeProofVerificationData
-implements VerificationData<BinaryRangeProof> {
+public class RangeProofVerificationData implements VerificationData<BinaryRangeProof> {
     private final GeneratorData<BinaryProof> generatorData;
     private final BigInteger maxRange;
 

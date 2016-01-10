@@ -21,7 +21,7 @@ implements ProofSystem<BinaryRangeProof, RangeProofData> {
     @Override
     public BinaryRangeProof createProof(RangeProofData data) {
         BigInteger secret = data.getSecret();
-        ArrayList<BinaryProof> binaryProofList = new ArrayList<BinaryProof>(data.getRandomnes().size());
+        ArrayList<BinaryProof> binaryProofList = new ArrayList<>(data.getRandomnes().size());
         for (int i = 0; i < data.getRandomnes().size(); ++i) {
             BinaryProofData binaryProofData = new BinaryProofData(secret.testBit(i), ECConstants.G, ECConstants.H, data.getRandomnes().get(i));
             binaryProofList.add(this.bitsProver.createProof(binaryProofData));
